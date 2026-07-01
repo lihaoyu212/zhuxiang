@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>诸相 · 世界观</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{background:#F8F4ED;color:#3B3D3F;font-family:'EB Garamond','Noto Serif SC','Source Han Serif SC','Songti SC',serif;line-height:1.8;-webkit-font-smoothing:antialiased;font-size:18px;overflow-x:hidden}
+
+  /* Hamburger */
+  .hamburger{position:fixed;top:20px;left:20px;z-index:100;width:40px;height:32px;display:flex;flex-direction:column;justify-content:space-between;cursor:pointer;padding:0;background:none;border:none;transition:all .3s}
+  .hamburger span{display:block;width:100%;height:2px;background:#3B3D3F;border-radius:1px;transition:all .3s cubic-bezier(.16,1,.3,1);transform-origin:center}
+  .hamburger.open span:nth-child(1){transform:translateY(15px) rotate(45deg)}
+  .hamburger.open span:nth-child(2){opacity:0}
+  .hamburger.open span:nth-child(3){transform:translateY(-15px) rotate(-45deg)}
+
+  /* Menu Overlay - page flip */
+  .menu-overlay{position:fixed;inset:0;z-index:90;background:rgba(248,244,237,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;pointer-events:none;transform-origin:left center;transform:perspective(800px) rotateY(-90deg);opacity:0;transition:transform .5s cubic-bezier(.25,.46,.45,.94),opacity .3s}
+  .menu-overlay.open{transform:perspective(800px) rotateY(0deg);opacity:1;pointer-events:auto}
+  .menu-inner{text-align:center;max-width:500px;padding:40px;opacity:0;transform:translateX(40px);transition:opacity .3s .15s,transform .4s .15s cubic-bezier(.16,1,.3,1)}
+  .menu-overlay.open .menu-inner{opacity:1;transform:translateX(0)}
+  .menu-inner h3{font-size:1.2rem;font-weight:500;color:#8E9196;margin-bottom:32px;letter-spacing:.04em}
+  .menu-inner a{display:block;font-size:1.6rem;color:#3B3D3F;text-decoration:none;padding:12px 16px;transition:all .25s;letter-spacing:.02em;border-bottom:1px solid rgba(122,96,88,.08);position:relative;border-radius:4px}
+  .menu-inner a::after{content:'';position:absolute;left:16px;right:16px;bottom:10px;height:1px;background:#537D96;transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+  .menu-inner a:hover{color:#537D96;background:rgba(83,125,150,.04)}
+  .menu-inner a:hover::after{transform:scaleX(1)}
+  .menu-inner a small{display:block;font-size:.8rem;color:#8E9196;font-weight:400;margin-top:2px;font-family:system-ui,-apple-system,sans-serif}
+  .menu-back{display:inline-block;margin-top:32px;font-size:.9rem;color:#8E9196;cursor:pointer;font-family:system-ui,-apple-system,sans-serif;border:none;background:none;padding:8px 16px;transition:color .2s}
+  .menu-back:hover{color:#537D96}
+
+  /* Page-turn shadow */
+  .menu-overlay::before{content:'';position:absolute;left:0;top:0;bottom:0;width:60px;background:linear-gradient(to right,rgba(0,0,0,.06),transparent);pointer-events:none;opacity:0;transition:opacity .3s}
+  .menu-overlay.open::before{opacity:1}
+
+  /* Page views with page-turn transition */
+  .page{display:none}
+  .page.active{display:block;animation:pageIn .5s cubic-bezier(.22,.61,.36,1)}
+  @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* Floating particles */
+  .particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .particle{position:absolute;width:2px;height:2px;background:#537D96;border-radius:50%;animation:floatUp 8s ease-in infinite}
+  @keyframes floatUp{0%{opacity:0;transform:translateY(100vh) scale(0)}10%{opacity:.4}90%{opacity:.15}100%{opacity:0;transform:translateY(-10vh) scale(2.5)}}
+
+  /* Mouse trail canvas */
+  #mouseTrail{position:fixed;inset:0;pointer-events:none;z-index:200}
+
+  /* Hamburger hover */
+  .hamburger:hover span{background:#537D96}
+
+  /* Back link hover */
+  .back-link{transition:all .25s cubic-bezier(.16,1,.3,1)}
+  .back-link:hover{color:#537D96;transform:translateX(-4px)}
+
+  /* ===== HOMEPAGE ===== */
+  .home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 28px;text-align:center}
+  .home .title-char{display:inline-block;font-size:5rem;font-weight:500;color:#3B3D3F;opacity:0;transform:translateY(30px);animation:charIn .6s cubic-bezier(.16,1,.3,1) forwards;letter-spacing:.06em}
+  .home .title-char:nth-child(1){animation-delay:.1s}
+  .home .title-char:nth-child(2){animation-delay:.25s}
+  @keyframes charIn{to{opacity:1;transform:translateY(0)}}
+  .home .subtitle{font-size:1.2rem;color:#6B6F73;margin-top:28px;line-height:2;opacity:0;animation:fadeUp .8s .5s cubic-bezier(.16,1,.3,1) forwards;max-width:600px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .home .tagline{margin-top:24px;font-size:1rem;color:#8E9196;opacity:0;animation:fadeUp .8s .7s cubic-bezier(.16,1,.3,1) forwards}
+  .home .enter-hint{margin-top:48px;font-size:.9rem;color:#8E9196;opacity:0;animation:fadeUp .8s 1s cubic-bezier(.16,1,.3,1) forwards;font-family:system-ui,-apple-system,sans-serif}
+  .home .enter-hint span{animation:pulse 2s ease-in-out infinite;display:inline-block}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* ===== DETAIL PAGES ===== */
+  .detail{padding:80px 28px 64px;max-width:900px;margin:0 auto}
+  .detail .back-link{display:inline-flex;align-items:center;font-family:system-ui,-apple-system,sans-serif;font-size:.9rem;color:#8E9196;cursor:pointer;background:none;border:none;padding:4px 0;margin-bottom:32px;transition:color .2s}
+  .back-link:hover{color:#537D96}
+  .back-link::before{content:'←';margin-right:6px}
+  .detail h2{font-size:2rem;font-weight:500;color:#3B3D3F;margin-bottom:8px;letter-spacing:.02em}
+  .detail .concept{font-size:1.2rem;color:#537D96;margin-bottom:10px;line-height:1.8;font-style:italic}
+  .detail .visual{font-size:1rem;color:#6B6F73;margin-bottom:32px;line-height:1.9}
+
+  /* Cards */
+  .card{background:#FCFAF5;border:1px solid rgba(122,96,88,.18);border-radius:4px;padding:24px 28px;margin-bottom:20px;transition:all .3s cubic-bezier(.16,1,.3,1);position:relative}
+  .card::before{content:'';position:absolute;left:0;top:8%;height:0;width:2px;background:#537D96;border-radius:1px;transition:height .4s cubic-bezier(.16,1,.3,1)}
+  .card:hover{box-shadow:0 2px 8px rgba(59,61,63,.08);border-color:rgba(83,125,150,.25)}
+  .card:hover::before{height:84%}
+  .card h3{font-size:1.15rem;font-weight:500;color:#3B3D3F;margin-bottom:12px;border-left:2px solid #537D96;padding-left:10px}
+  .card p{font-size:1rem;color:#6B6F73;line-height:1.9;margin-bottom:10px}
+  .card p:last-child{margin-bottom:0}
+  .card ul{padding-left:20px;font-size:1rem;color:#6B6F73;line-height:1.9}
+  .card li{margin:.3em 0}
+  .card li::marker{color:#537D96}
+
+  .dual-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+  @media(max-width:700px){.dual-grid{grid-template-columns:1fr}}
+
+  table{width:100%;border-collapse:collapse;font-size:.95rem;margin:8px 0}
+  th{text-align:left;font-weight:500;color:#6B6F73;padding:8px 10px;border-bottom:1px solid rgba(122,96,88,.18);white-space:nowrap}
+  td{padding:8px 10px;border-bottom:1px solid rgba(0,0,0,.05);color:#3B3D3F;vertical-align:top;line-height:1.7}
+  tr:last-child td{border-bottom:none}
+
+  hr{border:none;border-top:1px solid rgba(122,96,88,.18);margin:28px 0}
+  blockquote{border-left:2px solid #537D96;padding:6px 0 6px 16px;color:#6B6F73;font-style:italic;margin:16px 0;font-size:1rem;line-height:1.8}
+  .tag{display:inline-flex;padding:3px 10px;font-size:.8rem;font-weight:500;border-radius:4px;background:rgba(83,125,150,.08);color:#456A80;margin-right:6px;font-family:system-ui,-apple-system,sans-serif}
+
+  .list-card dt{font-weight:500;color:#3B3D3F;margin-bottom:2px;font-size:1rem}
+  .list-card dd{color:#6B6F73;margin-bottom:10px;font-size:.95rem;line-height:1.8;margin-left:0}
+
+  .footer{text-align:center;padding:56px 28px 40px;color:#8E9196;font-size:.95rem;line-height:2}
+  .footer span{color:#537D96}
+
+  html{scroll-behavior:smooth}
+  @media(prefers-reduced-motion){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<!-- Hamburger -->
+<button class="hamburger" id="hamburger" aria-label="菜单" onclick="toggleMenu()">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay">
+  <div class="menu-inner">
+    <h3>八 位 诸 相</h3>
+    <a href="#" onclick="showPage('织偶')">织偶<small>操纵与戏剧 · 丝庭</small></a>
+    <a href="#" onclick="showPage('朽壤')">朽壤<small>腐烂与新生 · 丰朽原</small></a>
+    <a href="#" onclick="showPage('镜川')">镜川<small>映照万象 · 镜泊城</small></a>
+    <a href="#" onclick="showPage('回环')">回环<small>衔尾之蛇 · 归镇</small></a>
+    <a href="#" onclick="showPage('晖光与胧影')">晖光与胧影<small>两个月面 · 伴月群</small></a>
+    <a href="#" onclick="showPage('浮梦')">浮梦<small>边界消融 · 眠岸</small></a>
+    <a href="#" onclick="showPage('墟渊')">墟渊<small>绝对不可逆 · 虚界</small></a>
+    <a href="#" onclick="showPage('断相者')" style="font-size:1.2rem;color:#8E9196">断相者<small>反派阵营 · 拒之相</small></a>
+    <a href="#" onclick="showPage('剧情')" style="font-size:1.2rem;color:#8E9196">剧情<small>三则故事</small></a>
+    <a href="#" onclick="showPage('more')" style="font-size:1.2rem;color:#8E9196;border-bottom:none">更多<small>时间线 · 源文件 · 关于</small></a>
+    <button class="menu-back" onclick="showPage('home')">← 返回主页</button>
+  </div>
+</div>
+
+<!-- ==================== HOMEPAGE ==================== -->
+<canvas id="mouseTrail"></canvas>
+<div class="page active" id="page-home">
+  <div class="particles" id="particles"></div>
+  <div class="home">
+    <div>
+      <span class="title-char">诸</span><span class="title-char">相</span>
+    </div>
+    <p class="subtitle">八位不生不灭、没有起源的原始存在。<br>不是神，不要求崇拜；不是法则，不被遵循。<br>各自独立地盘踞在宇宙的不同角落。</p>
+    <p class="tagline">「相」——面貌、形态、表象。没有创世神话，没有谁生了谁。</p>
+    <p class="enter-hint"><span>☰</span> 左上角导览</p>
+  </div>
+</div>
+
+<!-- ==================== 织偶 ==================== -->
+<div class="page" id="page-织偶">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>织偶</h2>
+    <p class="concept">操纵与戏剧之神。瓷白面具微笑，提线永不断。</p>
+    <p class="visual">悬浮的提线木偶，面部是一张永远微笑的瓷白面具，手指连着无数看不见的丝线延伸到虚空深处。丝庭中央是一张空椅子——织偶并不坐在上面，它悬浮在椅子之上，俯视一切。进入丝庭的人会立刻感到被什么东西轻轻牵住了——但低头看时，手腕上什么也没有。</p>
+
+    <div class="card"><h3>领域 · 丝庭</h3>
+      <p>数以万计的丝线从不可见的穹顶垂落，末端连着被操控的"演员"——人、兽、石、云。织偶不隐藏任何东西，丝线也从不遮掩。同行者在此学习操纵与被操纵，有些主动请求织偶赐下一根丝线——因为想要和更高的意志相连。织偶从不拒绝也从不答应，只是微笑着把线递过去。</p>
+    </div>
+
+    <div class="card"><h3>命途能力 · 四层丝法</h3>
+      <table>
+        <tr><th style="width:14%">察丝</th><td>看见人与事之间无形的丝线——动机、关系、权力流向。入门即终极自我祛魅：你同时看到了自己手上连着的每一根线。</td></tr>
+        <tr><th>牵丝</th><td>轻轻拨动某根线。一份犹豫被推成决定，一场谈判的平衡发生微移。双向的——你的颤动也暴露你。在织偶命途上没有单向操纵。</td></tr>
+        <tr><th>编丝</th><td>编织从未存在过的联结。大师可覆盖整座城市的丝网——微妙调节情绪、舆论、统治者晚餐时的一闪念。代价：从自身抽丝，逐渐变薄，不是变老，是变成半透明。</td></tr>
+        <tr><th>面纱</th><td>终极能力。让自己从命运的账本上消失——预言失效，仇敌失忆，名字从记录中脱落。戴越久越不像人，面容趋近织偶的瓷白微笑。据说织偶本人也会暂时失去你的踪迹。</td></tr>
+      </table>
+    </div>
+
+    <div class="card"><h3>追随者 · 牵线人</h3>
+      <p><span class="tag">牵线人</span>——天生的表演者、被命运打击的失落者、纯粹好奇的观察者。无组织无等级，师徒靠暗示不靠明教，相遇时眼神相交一秒互认。</p>
+      <p>修行方式：观线（在市场、议会、葬礼安静地看）、牵线练习（从让自己想喝茶开始）、织线冥想（追溯自己身上的每根线连向谁）、去丝庭朝圣（一生一次）。三种终点：成为网（意识散布全城丝线中）、永戴面纱（被世界遗忘）、或剪断连着织偶的那根线——没有人做到，但每个人都在想。</p>
+    </div>
+
+    <blockquote>第一个牵线人是一个宫廷乐师。他在宴会上看到每个人手上的丝线，停下演奏，对国王说：「陛下，有人在扯您。」这句话没有载入史册，但它在人类意识的深处留下了第一道裂缝。</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 朽壤 ==================== -->
+<div class="page" id="page-朽壤">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>朽壤</h2>
+    <p class="concept">腐烂与新生是一体两面。落叶化土，新芽破土。</p>
+    <p class="visual">由落叶、腐土、新芽和真菌构成的人形轮廓，身上永远有东西在死去也有东西在新生。它永远在亲手埋葬什么——把腐烂的果实按入土中；也永远在亲手接生什么——从泥土里托起刚冒的嫩芽。</p>
+
+    <div class="card"><h3>领域 · 丰朽原 → 生冢</h3>
+      <p><strong>外域·丰朽原：</strong>广阔肥沃的谷地，每一寸土壤由历代枯骨、落叶、腐木堆积。城镇环绕巨大堆肥塔而建，年长者主动走进塔中把最后养分还给土地。死亡不是葬礼，是一场庆典——你吃下的每一口食物里都有某位祖先的一部分。</p>
+      <p><strong>核心·生冢：</strong>越过尽头，土壤松软如活物。只有一棵永远半枯半荣的巨树——树干一半枯木灰白，一半新叶嫩绿。朽壤就在树下。只有活满一生的老农才能在临终前踏入这里，成为那棵树根系的一部分。</p>
+    </div>
+
+    <div class="card"><h3>命途能力 · 腐种</h3>
+      <p>朽壤不授予能力——它在每一个经历过真正失去的人心里埋下一颗<strong>腐种</strong>。腐种以记忆、遗憾、旧伤疤为养分，每颗独一无二。不是修炼出来的——是<strong>事件</strong>触发的。两个同样经历丧亲的人，长出来的能力可能完全不同。腐种只给土壤，长成什么看你自己。</p>
+      <dl class="list-card">
+        <dt>常见栽培</dt>
+        <dd><strong>归葬：</strong>将已死之物加速分解，同片土壤让新生命诞生。从不变样归还——是荞麦不是麦子。<br>
+        <strong>承痛：</strong>承担他人伤痛移植到自己身上腐烂掉。代价是留下一个永不消失的疤痕，形状像那人的指纹。<br>
+        <strong>残响：</strong>感知已逝之人最后留下的情感——你只是走到他死去的地方，闭上眼睛闻到最后的遗憾。然后把未说的话写下来、吞下去、或种进土里。<br>
+        <strong>根的语：</strong>和植物交换信息。代价是变得越来越慢、越来越安静。</dd>
+        <dt style="margin-top:8px">罕见栽培</dt>
+        <dd><strong>赠年：</strong>把自己寿命赠予另一个人。极少有人掌握——因为极少有人对另一个人爱到愿意少活几年。<br>
+        <strong>逆根：</strong>让死物从体内长出根变成植物。死去的鸟长出藤蔓，"走"到阳光下把自己种下，花的颜色和羽毛一个颜色。<br>
+        <strong>全葬：</strong>让不该存在的有形之物完整归于土——一座不该存在的建筑、一件承载太多痛苦的遗物、一段不该保存的记忆。朽壤会亲自种下合适的东西——你不能选，只能信。</dd>
+      </dl>
+    </div>
+
+    <div class="card"><h3>追随者 · 归土人</h3>
+      <p><span class="tag">归土人</span>——失去过的人、医者殡葬者、种地的人。不是主动入道，是被腐种选中。日常：松土（每天翻一小块土，跟蚯蚓说早）、收纳（把路边死蛇带回家埋好——物归原处）、记录转化（腐册——三月七日埋下的麻雀，五月杏花多三倍）、不说话（说话很少，如果突然说了一句完整的话——注意听，通常很重要）。</p>
+      <p>死亡不叫死——叫<strong>入土期</strong>。不哭不唱，一人一把土。一年后新生礼——树上果实里藏着逝者的记忆。最老的归土人入土后，意识分布整片根系网络，在森林里被孩童偶遇——某棵树上有一张脸的轮廓，不说不动，但在树下坐一会儿会感到有人摸你的头。</p>
+    </div>
+
+    <blockquote>丰朽原是被一个老妇人种出来的。她埋葬了丈夫、两个孩子和最后一只羊，然后在这片土上耕种。活了一百四十三岁——树根的年龄一根不多一根不少。她坟上的那棵树至今还在丰朽原正中，是生冢之母。</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 镜川 ==================== -->
+<div class="page" id="page-镜川">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>镜川</h2>
+    <p class="concept">空无所有，所以映照万象。</p>
+    <p class="visual">一面立在地上的无边镜面，水面般流动，偶尔浮出观看者内心深处的影像。争议在于：它是因为空无所以映照万物，还是万物只是它映照出的幻象？镜川从不作答。</p>
+
+    <div class="card"><h3>领域 · 镜泊城 → 万镜廊</h3>
+      <p><strong>外域·镜泊城：</strong>建在湖面上的城市。水面平静如镜，建筑倒映和实物一样清晰。居民每天早上对着水面问自己一个问题，若倒影的口型变了就记在行事历上严格遵行。镜泊城没有隐私——你的倒影比你更诚实，说谎没有意义。</p>
+      <p><strong>核心·万镜廊：</strong>无尽走廊，两侧镜子映出的是你的过去、不曾活过的可能性、某个再也见不到的人。停在某面镜子前太久，走出去时身上会多出镜中人的一部分——也许是习惯，也许是记忆。万镜廊不是被建造的——世界上每面碎掉的镜子有一部分回到镜川，历代积累拼成了这条走廊。</p>
+    </div>
+
+    <div class="card"><h3>命途能力 · 六道镜术</h3>
+      <table>
+        <tr><th style="width:14%">镜行</th><td>走进一面镜子，从另一面走出来。瞬移、穿墙、闪避。紧急时把自己拉进镜中世界短暂停留——但超过十秒会开始看到镜川本身，见过的人不愿描述。</td></tr>
+        <tr><th>镜语</th><td>通过两面镜子之间形成的"镜廊"传声到任何正在被注视的镜子前。不会被截获——镜廊里只有光。代价：镜子里你的倒影有时会多说一句——通常是你心里在想但没说的。</td></tr>
+        <tr><th>镜捕</th><td>扣押一个人的倒影。没有倒影的人做事迟疑、运气变差。用途：审讯（让倒影动摇则本人同步动摇）、追踪（感知方向）、施压。镜泊城法律禁止超三天的扣押。</td></tr>
+        <tr><th>镜忆</th><td>唤醒镜子的记忆，回放它曾映照的一切。完全忠实，没有滤镜。镜泊城法庭核心工具——不靠证人，靠镜子的记忆。但镜子没对着的角度是死角。</td></tr>
+        <tr><th>镜返</th><td>弹回任何攻击。极少数大师能反弹更抽象的东西——诽谤的字句从骂者嘴里倒着吐回来，变成对他自己的污蔑。不可教，据说是你的倒影帮你做的。</td></tr>
+        <tr><th>镜域</th><td>终极镜术。把整个空间覆盖为镜面——你是规则本身：空间任意连接，出口永远找不到，每一个人面对自己的倒影直到开始和自己辩论。一生只能用一次。用完后所有镜面碎裂，裂纹变成记忆嵌在墙上。</td></tr>
+      </table>
+    </div>
+
+    <div class="card"><h3>追随者 · 镜中人</h3>
+      <p><span class="tag">镜中人</span>——和倒影合住一具身体。三类：问到底者（每天不确定自己是谁）、求真者（法庭上的判官，镜忆做证据）、镜的匠人（和镜子的关系是友谊，镜子愿为他们多开一扇门）。</p>
+      <p>日常：对镜（每天确认倒影有没有做奇怪的举动）、镜廊社交（在镜廊无限反射中约定深处碰头）、镜中过夜（意识进镜廊游荡，带回远方镜子映出的画面——不是梦，是出差）。镜泊城法律规定水面下的倒影与本人享有同等权利。三种终点：碎镜（意识飘在镜廊变回音）、入镜（封进一面镜子里，别人照到的就是你的脸）、换面（和另一个世界的陌生人交换镜子）。</p>
+    </div>
+
+    <blockquote>第一个发现倒影的原始人在湖边看了水里的脸整整一夜。他死后骨殖附着一层镜面般的釉质——镜川终于告诉他：你猜对了。水里那个人不完全是你。那片湖后来成了镜泊城的原址。</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 回环 ==================== -->
+<div class="page" id="page-回环">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>回环</h2>
+    <p class="concept">衔尾之蛇。循环不是重复，是每一次微小的偏移。</p>
+    <p class="visual">由无数越来越小的环嵌套构成的几何神体，每一个环都在自转。它不转，世界绕着它转。时间不是一条河——是一口井。你在井下往上望，爬了很久发现脚下踩的砖和头顶的砖是同一块。</p>
+
+    <div class="card"><h3>领域 · 归镇 → 衔尾廊</h3>
+      <p><strong>外域·归镇：</strong>环形小镇，街道一圈圈绕。年轻人在外圈，老人靠内圈。不记日子——只说"这一圈""上一圈"。居民对变化极度敏感：茶壶移了两厘米，整镇警觉——循环在偏，微妙的变化来了。归镇不是刻意建造的——地面在极其缓慢地绕圈旋转，房子跟着偏转，人跟着房子住。</p>
+      <p><strong>核心·衔尾廊：</strong>最内圈只有一扇孤零零的门。推开是首尾相接的环形走廊——永远走不完。每走一圈世界发生一点点变化：墙上的裂纹多了一条，灯光色温变了，角落多了一扇门。当偏移积累够多时，出口已不在原来的纪。</p>
+    </div>
+
+    <div class="card"><h3>命途能力 · 五道环术</h3>
+      <table>
+        <tr><th style="width:14%">折返</th><td>回放刚过去的几秒，重选一次。在外人看来只是反应极快。上限约三十秒——时间越远需要的环感越强。</td></tr>
+        <tr><th>定锚</th><td>选定归点，失败后可回去重来。但每次回归都会偏移归点本身——回来太多次，想回到的那个时刻已经不存在了。最危险的环术，因为你会贪：再来一次，这次一定对。</td></tr>
+        <tr><th>选偏</th><td>主动选"被选次数最少"的选项。被选次数越少的岔路，在循环中的偏移势能越高。战斗：上次输了但记住了对手每个招式——不是预判，是<strong>上一次的教训带到了这一次</strong>。</td></tr>
+        <tr><th>成环</th><td>把一件事的所有可能性遍历一遍，在最佳结局处关上循环。其他版本全部消失。代价：脑子里塞满不存在世界线的记忆——最孤独的环术。</td></tr>
+        <tr><th>衔尾</th><td>传说级。不再有过去现在未来的区别——在时间线上遍历一切，首尾相接。有人在归镇街上遇到一个面熟的人，对方叫了你的名字——是你四十岁以后改的那个名字。</td></tr>
+      </table>
+    </div>
+
+    <div class="card"><h3>追随者 · 环行者</h3>
+      <p><span class="tag">环行者</span>——重复的幸存者（同一个隘口打四次仗，身体记得伏击位置）、时间的匠人（钟表匠察觉规律太完美不像是自然形成）、第二次人生者（今天真的发生了两次）。环感无法教授——是天生的，或在一次足够大的循环偏移中被撞开。</p>
+      <p>归镇日常：不记日子、留意偏移、内迁（环感越深越靠近中心，最老的老人在最内圈坐一整天——对他们来说不是"一天"，是"一圈"）。环行者之间用环识互认——对视的瞬间共享上一圈这一刻的画面。死亡不是死了："这一圈不错。下一圈见。"</p>
+    </div>
+
+    <blockquote>衔尾廊是第一个走进去的年轻女子发现的。她只走了一圈，头发白了一半。她带回来一句话，至今刻在归镇最内圈门上：「每一圈都不一样。但都一样短。」</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 晖光与胧影 ==================== -->
+<div class="page" id="page-晖光与胧影">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>晖光与胧影</h2>
+    <p class="concept">同一轮月亮，两个面孔。缺时守护，满时燃烧。</p>
+    <p class="visual">一轮巨大的悬浮月亮——缺时是安静的灰白弧光（胧影的寂域），满时整个月面燃起温暖的金色（晖光降临）。两者之间的黄昏线是一道缓缓流动的光带。月亮常有缺，只有满月之夜晖光占据全部月面。晖光在缓慢地衰弱——每一次满月都比上一次暗几分。</p>
+
+    <div class="card"><h3>领域 · 伴月群 → 月阈</h3>
+      <p><strong>外域·伴月群：</strong>环绕大月亮的群星环带，由破碎岩石、浮岛和尘埃组成。大多数日子头顶是缺月——胧影的寂静笼罩，安静劳作。满月之夜全镇涌向浮岛边缘向满月伸手。老人说：「好好看。下一次满月可能又暗了几分。」</p>
+      <p><strong>核心·月阈：</strong>月面本身。一半金色火域（晖光），一半无光暗域（胧影），中间黄昏线是两者唯一的交会处。凡人不可肉身涉足。满月之夜最虔诚者可在梦中短暂踏入那条交界带——同时感受两种存在注视自己，一个炽热如拥抱，一个温柔如守望。</p>
+    </div>
+
+    <div class="dual-grid">
+      <div class="card"><h3>晖光 · 显能</h3>
+        <table>
+          <tr><th style="width:28%">灼见</th><td>注视一个人的真实意图——善意暖光，恶意冷光，谎言闪烁不定。不是读心，是读"一致性"。</td></tr>
+          <tr><th>光誓</th><td>满月下说出的话不可撤销——毁誓者的影子在下一次满月燃烧。无影之人不会死但极其显眼，任何光源下都暴露。</td></tr>
+          <tr><th>满溢</th><td>满月夜灌注生命力——伤者加速愈合，垂死之人暂返照。但每一次使用都在消耗晖光本身的余热。三世纪前满月可在夜读小字，现在只能走路不撞。</td></tr>
+        </table>
+      </div>
+      <div class="card"><h3>胧影 · 隐能</h3>
+        <table>
+          <tr><th style="width:28%">匿形</th><td>不是隐身——是不再被注意到。存在降低为环境白色噪声，持续约一小时需重新补充暗。被突然照亮立刻失效。</td></tr>
+          <tr><th>暗渡</th><td>携带同伴入匿形。被携带者需完全静止。最传奇的大师护送整村孩子——天亮后发现她已没有影子。匿形用满，剩下全是燃。</td></tr>
+          <tr><th>守寂</th><td>无月之夜扩散感知至半径所有暗处——地下、墙后、深夜田野。需完全静止——有行者守了七年，不能再走路，但每一颗流星都提前告诉她。</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="dual-grid">
+      <div class="card"><h3>辉士 · 晖光的追随者</h3>
+        <p>不愿沉默的人。被月亮"望回来"过——满月下说了从未对人说过的一句真话。</p>
+        <p>日常：<strong>送热</strong>（每天找需要温度的人或物，把手放上几秒不是治疗是陪伴）、<strong>记亮</strong>（满月后用感光石板测量亮度——数字在降，一个辉士一生就能看到变化）。终点：<strong>最后一燃</strong>——走到最外缘浮岛把自己燃尽，月面上留下一个永久温热的暗暖印记。</p>
+      </div>
+      <div class="card"><h3>寂人 · 胧影的追随者</h3>
+        <p>不需要被记住的人。帮你做了事之后你会迟疑"是谁？"——这就是寂人的全部。</p>
+        <p>日常：<strong>补暗</strong>（辉士的光破坏阴影边界，寂人负责重描守护暗室）、<strong>读形</strong>（观测浮岛土壤微变，手移散土确保缺月投到正确位置）。终点：<strong>永守</strong>（守住一片固定暗面直到不再需要回应）或<strong>归月</strong>（缺夜漂向月面暗侧，被胧影收纳成一个永不被满月照到的极小谷地——"归巷"）。</p>
+      </div>
+    </div>
+
+    <blockquote>满月属于辉士。其余所有夜晚属于寂人。两个命途住在同一片伴月群——不是和谐共处，是分时共存。月亮的每一圈，有人燃，有人守。</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 浮梦 ==================== -->
+<div class="page" id="page-浮梦">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>浮梦</h2>
+    <p class="concept">意识与意识之间的夹层。让边界融化，不制造真相也不编造谎言。</p>
+    <p class="visual">没有固定样貌。呈现为每个人梦中最难忘的那个画面——对你是童年老房子的后院，对他是从未去过却觉得熟悉的街角。最常见的是将明未明时的灰蓝色。每一个正在做梦的人都踩在浮梦的皮肤上。</p>
+
+    <div class="card"><h3>领域 · 眠岸 → 隙乡</h3>
+      <p><strong>外域·眠岸：</strong>清醒与梦境之间的模糊地带。天空永远是灰蓝色，记忆以雾的形态凝聚在角落——你走过巷子，雾气浮现十年前忘了的人的脸，几秒后消散。居民大多是失眠者，学会了分辨哪些雾是别人的记忆（不要碰），哪些是浮梦路过的迹象（立刻跟上）。从不问彼此"你醒着吗"——因为自己也说不清。</p>
+      <p><strong>核心·隙乡：</strong>继续往深处，地面越来越软像踩在云的边缘。没有固定样子，浮梦就是隙乡本身。当你在梦里回头看见街角有什么一闪而过——那是浮梦在看你。</p>
+    </div>
+
+    <div class="card"><h3>命途能力 · 梦域五层</h3>
+      <table>
+        <tr><th style="width:14%">檐梦</th><td>最浅层。刚闭眼还没睡着——意识表层碎片。能看见别人正在形成的檐梦片段，辨认他们真正担心的东西。代价：别人的焦虑变成你自己的噩梦。</td></tr>
+        <tr><th>宿梦</th><td>真正的梦——记忆的下水道。能打捞自己或他人遗忘的记忆。帮他找到——不是替他看到。代价：每打捞一次，自己宿梦里永久流失一小块——你永远不知道你忘了什么。</td></tr>
+        <tr><th>共梦</th><td>多人同梦。最高效的沟通——不是说话是共感，让他人真切体会你的情绪。代价：醒后留下"纱缝"，数周内偶尔感到对方情绪。纱缝不能多——三个人以上可能分不清谁是谁的。</td></tr>
+        <tr><th>隙梦</th><td>不属于任何人的梦——梦与梦之间的空隙。能在此存放秘密——把一段记忆压成一枚戒指，浮梦收存，只有你能回来取。代价：带回不属于自己的画面残余，你不再完全拥有自己的梦。</td></tr>
+        <tr><th>沉梦</th><td>隙乡最深处。逻辑暂停，时间可弯——你是所有你曾在梦里当过的人的总和。进入者很少，归来者更少。有人说在那里看到了自己出生前的瞬间；有人看到了自己不在以后的旷野，那里仍有鸟叫。</td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:.9rem;color:#8E9196">不是操控梦境——是让边界失效。浮梦不给你能力，给你的是纱的触感。</p>
+    </div>
+
+    <div class="card"><h3>追随者 · 眠岸人</h3>
+      <p><span class="tag">眠岸人</span>——分不清自己是不是醒着的人（碰到了纱）、被当成异端的解梦老手、莫名追一只鸟就漂到眠岸的人。日常：理纱（摸空气找梦与现实边界拉直固定）、泡梦（梦露蒸馏后暂停一小时被浮梦托着）、寻隙（陪失忆者在宿梦里翻旧相册——叫"拜访"，不是手术）。</p>
+      <p>边界伦理：纱与纱之间永远留一指缝。不进不该进的梦。越界者的惩罚不是惩罚——浮梦把那块纱从你手上收回，从此你只能碰自己的梦。终点：留纱（把最后一片最深记忆放在隙乡——后来的新手捡到的戒指、温布、不湿的灰蓝，都是前人留下的）、成纱（变成眠岸天边一缕永不飘散的灰蓝雾）、归沉（在沉梦看到自己出生瞬间——不碰不走不带，此后不再区分清醒和梦）。</p>
+    </div>
+
+    <blockquote>浮梦是人类最早感觉到但最晚确认的诸相。第一个分享梦的人是一个远古老妇——她醒来后说出了另一个人昨夜的梦，而她从未去过那人童年的河。眠岸的天是灰蓝色，因为浮梦把白昼和深黑用指腹搓匀压薄，递过来，搁在原地。</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 断相者 ==================== -->
+<div class="page" id="page-断相者">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>断相者</h2>
+    <p class="concept">不追随任何诸相。不是不信——是拒绝。</p>
+    <p class="visual">八个诸相都有追随者。但有一群人不走任何命途。他们自称断相者——外界叫他们"无相者"、"白刃"、"剪线的人"。他们相信诸相是寄生在人类意识上的八道裂缝，每一条命途都是裂缝在通过人类触碰世界。他们的目标是关上每一扇被推开的门。</p>
+
+    <div class="card"><h3>三种成员</h3>
+      <p><strong>挣脱者：</strong>曾是某个诸相的深度追随者，走到命途尽头看到了裂缝本身。第一个创始人是个剪掉自己所有丝线的前牵线人——他在丝庭跪了三天三夜，用指甲一根一根剪断了七十六根线。他对织偶说："我剪线不是因为你对我做了什么。是因为你什么都没有做。"</p>
+      <p><strong>受伤者：</strong>没有走过命途，但被命途伤害过。全家在满月暴燃中丧生、被牵线人操控毁了一生、在镜域里困了半辈子。他们被问一句话："你知道你经历的那些，不是你自己选的——是裂缝替你选的。你要不要选回去。"</p>
+      <p><strong>质问者：</strong>一辈子在想一个问题——没有这些诸相，人类会不会也好好活着。某一夜同时感觉到了八个方向的命途引力拉扯。全部拒绝了。那一夜之后他们能看见裂缝的形状。</p>
+    </div>
+
+    <div class="card"><h3>能力——拒力</h3>
+      <p>断相者不借诸相之力。他们的力量来自<strong>拒绝本身</strong>。每一次面对裂缝伸出的手然后说"不"——这个"不"本身就是一种力，叫拒力。拒力不能攻击、不能防御、不能创造、不能转化。拒力只能做一件事：断开连接。</p>
+      <table>
+        <tr><th style="width:14%">断域</th><td>站在某个空间内，让空间变成暂时的"死区"——没有任何诸相能感知到其内存在。丝线悬空找不到末端，灼见望进去只看到白噪。</td></tr>
+        <tr><th>断人</th><td>用拒力包裹一个人——他的腐种休眠、环感静默、镜术失效。持续几周到几个月，取决于他在命途上走过多深。走得越深，断得越短。</td></tr>
+        <tr><th>断忆</th><td>最极端。回退人类意识中对某个诸相的认知到觉醒之前。不是删除记忆——是堵死。内部对此极度分裂。</td></tr>
+      </table>
+    </div>
+
+    <div class="card"><h3>内部三派</h3>
+      <p><strong>温和派：</strong>只防新门不开。诸相已在里面的不动——代价太大。</p>
+      <p><strong>激进派：</strong>回退至少三个大纪元的觉醒——把镜映纪之后认知全部堵死。"人类在镜子里看不到自己是谁之前，也活得好好的。"</p>
+      <p><strong>割裂派：</strong>一次性全部断开。哪怕代价是人类意识退回到沉土纪之前的黑暗。当前领袖是第一个剪线的牵线人——两百余年后仍在。他腕上被线环绕过的地方已无痕。</p>
+    </div>
+
+    <div class="card"><h3>拒之相——人造之神</h3>
+      <p>断相者最深处有一个从未公开的项目。每次释放断域后，盲区中心会留下一枚极小的透明几何体——<strong>余拒</strong>。几十纪以来，余拒被秘密收集、融合。余拒之间会互相靠近、共振、合并。</p>
+      <p>割裂派正在用余拒制造一个<strong>人造之神</strong>——拒之相。不是追随、不是崇拜——是制造。逻辑：裂缝之所以是裂缝，因为它们比人类强大。但如果造出一堵比裂缝更强大的活墙——裂缝就无法靠近。</p>
+      <p>拒之相的能力是所有诸相的反面：让连接<strong>从未存在过</strong>。如果完全成型，可以成为第九条命途——所有命途之外的空白。走在这条路上的人不再被任何诸相感知。存在，但不在世界的账本上。</p>
+      <p>代价：每一寸生长取自一个活人自愿割弃的命途入口。割弃者不会死，但满月只是亮没有温度，镜子里的倒影不再眨眼。至今不足十位割弃者。其中一位割弃后在伴月群边缘坐了整整一纪。她说："我不后悔。我只是不知道被看见原来是这种感觉。"</p>
+      <p style="margin-top:8px;font-size:.9rem;color:#8E9196">诸相知道它的存在。织偶感知过丝庭一瞬的异动。朽壤在余拒库外留了一粒种子。镜川把不映的镜片转向朝内。墟渊的界守在靠近时凉点变钝——"不是更大的虚，是更小的无。"</p>
+    </div>
+
+    <blockquote>断相者没有大本营，没有旗帜。他们互相识别的方式不是丝线共振、不是环识、不是凉点——是"你也醒了吗"四个字。回以"我也醒了"就完成了确认。</blockquote>
+  </div>
+</div>
+
+<!-- ==================== 剧情 ==================== -->
+<div class="page" id="page-剧情">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>剧情片段</h2>
+
+    <div class="card"><h3>一、最后一纪</h3>
+      <p style="font-size:.9rem;color:#8E9196;margin-bottom:12px">双月纪第三百七十一纪，满月前夜。</p>
+      <p>老辉士阿霭坐在伴月群最外缘浮岛上，双腿悬在虚空中。七十一岁，经历了七次满月。这是她的第八次。她知道自己不会等到第九次了。不是身体不行——是这一纪的晖光太暗了。观相师预告本轮满月亮度只有上一纪的百分之九十九点四。她八岁那年能夜读小字的满月，如今只能勉强照出脚边的浮岛边缘。</p>
+      <p>她用指尖摸了一下石板上的刻痕。三百七十一纪，每一纪都有一道痕。她的老师刻了前两百纪，她刻了后面一百多纪。学徒会在明天满月后刻这一纪。她会在刻痕之前把自己燃尽。</p>
+      <p>不是寻死。是辉士的最后一燃。晖光在衰弱，每一纪的满溢都在消耗它残余的温度。辉士有义务：它借过光给你，现在你该把光还回去了。她只怕晖光熄灭之后胧影太安静，所以要把温度留在月面上——不是暖那块石头，是陪那个以后将要独自转圈的存在说：有人来过。</p>
+      <p>满月开始升起。她站起身。影子在身后变淡。</p>
+    </div>
+
+    <div class="card"><h3>二、剪线</h3>
+      <p style="font-size:.9rem;color:#8E9196;margin-bottom:12px">牵丝纪末期。</p>
+      <p>一个中年男人跪在丝庭正中。手腕上曾经连着七十六根线，过去三天里用指甲一根一根剪断了。织偶悬浮在上方，瓷白面具没有任何表情。面具上一道极细的笑纹似乎微微偏了半度。</p>
+      <p>"你把线还给我了。不是你借的——线是你自己的。"男人的声音很轻，嘴唇干裂，但声音不抖。"我不是来怪你的。我来告诉你一件事。我剪线不是因为你对我做了什么。是因为你什么都没有做。你把线递给我，我接了。你从来不逼任何人。这正是为什么我必须自己剪。"</p>
+      <p>织偶的手指轻轻动了一下——不是牵线的手势，是把它的手从一条看不见的线轴边缘移开了。男人站起来，朝丝庭出口走了几步。丝庭出口的线帘在他经过时自动偏了一下，给他让了一条刚好够一个人通过的空隙。</p>
+      <p>他走出去之后，丝庭某一角扇区的丝线集体偏了一度——朝向他的背影。不是牵。是送。</p>
+    </div>
+
+    <div class="card"><h3>三、入土期</h3>
+      <p style="font-size:.9rem;color:#8E9196;margin-bottom:12px">丰朽原东垄，第三棵杏树下。</p>
+      <p>老归土人不知道自己多大年龄。他的腐册堆在床边，从七十年前第一页开始——三月七日，麻雀埋入杏树下；五月花多开三倍；花谢后有麻雀在树下筑巢，巢的形状和三月那只一模一样。此后每一页都有类似的条目，没有中断过。</p>
+      <p>今天他埋最后一次。不需要东西。他自己就是最后一件。在杏树下躺好，双手交叠在胸前。杏树的根在浅土层微微起伏——没有语言，隔着土。他理解成：好了就到这里。不急。欢迎。</p>
+      <p>在黄昏时闭上眼睛。意识不是突然熄灭——是缓慢散开。第一圈能感到东垄整行树，第二圈觉出暖根往西延伸跨了半条渠，第三圈淡了——他知道自己还在，只是不再是一个人。</p>
+      <p>第二天清晨邻居来树下，地面多了一层极薄的新苔——形状不像躺痕，像一双手掌轻轻按过的轮廓。邻居没有哭。把腐册放进杏树北面一个根隙里。根隙还在以肉眼不可及的速度缩小。不是合拢——是有人在里面接那本书。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 更多 ==================== -->
+<div class="page" id="page-more">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>更多</h2>
+
+    <div class="card"><h3>源文件</h3>
+      <p style="margin-bottom:16px">所有 Markdown 原始文档，点击在新标签页中查看。</p>
+      <p><strong>总纲</strong>　<a href="诸相·世界观.md" target="_blank">诸相·世界观</a>　·　<a href="纪元.md" target="_blank">纪元</a>　·　<a href="时间线.md" target="_blank">时间线</a>　·　<a href="纪年表.md" target="_blank">纪年表</a>　·　<a href="满月纪.md" target="_blank">满月纪</a></p>
+      <p style="margin-top:8px"><strong>阵营</strong>　<a href="断相者.md" target="_blank">断相者</a>　·　<a href="拒之相.md" target="_blank">拒之相</a></p>
+      <p style="margin-top:8px"><strong>故事</strong>　<a href="剧情片段.md" target="_blank">剧情片段</a></p>
+      <p style="margin-top:12px"><strong>织偶</strong>　<a href="织偶/领地.md" target="_blank">领地</a> · <a href="织偶/能力.md" target="_blank">能力</a> · <a href="织偶/追随者.md" target="_blank">追随者</a> · <a href="织偶/历史.md" target="_blank">历史</a> · <a href="织偶/诸相关系.md" target="_blank">诸相关系</a></p>
+      <p><strong>朽壤</strong>　<a href="朽壤/领地.md" target="_blank">领地</a> · <a href="朽壤/能力.md" target="_blank">能力</a> · <a href="朽壤/追随者.md" target="_blank">追随者</a> · <a href="朽壤/历史.md" target="_blank">历史</a> · <a href="朽壤/诸相关系.md" target="_blank">诸相关系</a></p>
+      <p><strong>镜川</strong>　<a href="镜川/领地.md" target="_blank">领地</a> · <a href="镜川/能力.md" target="_blank">能力</a> · <a href="镜川/追随者.md" target="_blank">追随者</a> · <a href="镜川/历史.md" target="_blank">历史</a> · <a href="镜川/诸相关系.md" target="_blank">诸相关系</a></p>
+      <p><strong>回环</strong>　<a href="回环/领地.md" target="_blank">领地</a> · <a href="回环/能力.md" target="_blank">能力</a> · <a href="回环/追随者.md" target="_blank">追随者</a> · <a href="回环/历史.md" target="_blank">历史</a> · <a href="回环/诸相关系.md" target="_blank">诸相关系</a></p>
+      <p><strong>晖光与胧影</strong>　<a href="晖光与胧影/领地.md" target="_blank">领地</a> · <a href="晖光与胧影/能力.md" target="_blank">能力</a> · <a href="晖光与胧影/追随者.md" target="_blank">追随者</a> · <a href="晖光与胧影/历史.md" target="_blank">历史</a> · <a href="晖光与胧影/诸相关系.md" target="_blank">诸相关系</a></p>
+      <p><strong>浮梦</strong>　<a href="浮梦/领地.md" target="_blank">领地</a> · <a href="浮梦/能力.md" target="_blank">能力</a> · <a href="浮梦/追随者.md" target="_blank">追随者</a> · <a href="浮梦/历史.md" target="_blank">历史</a> · <a href="浮梦/诸相关系.md" target="_blank">诸相关系</a></p>
+      <p><strong>墟渊</strong>　<a href="墟渊/领地.md" target="_blank">领地</a> · <a href="墟渊/能力.md" target="_blank">能力</a> · <a href="墟渊/追随者.md" target="_blank">追随者</a> · <a href="墟渊/历史.md" target="_blank">历史</a> · <a href="墟渊/诸相关系.md" target="_blank">诸相关系</a></p>
+    </div>
+
+    <div class="card"><h3>纪元</h3>
+      <p style="margin-bottom:16px">诸相不生不灭没有先后。但人类对它们的意识是逐层剥开的——七次觉醒，七个纪元。完整文档见 <a href="纪元.md" target="_blank">纪元.md</a>。</p>
+      <table>
+        <tr><th style="width:14%">纪元</th><th style="width:16%">觉醒诸相</th><th style="width:16%">跨度</th><th>核心主题</th></tr>
+        <tr><td>第一纪 · 沉土纪</td><td>朽壤</td><td>最漫长</td><td>埋葬、农业、对土壤的原始信任</td></tr>
+        <tr><td>第二纪 · 回日纪</td><td>回环</td><td>数万年</td><td>计数、历法、对循环的信念</td></tr>
+        <tr><td>第三纪 · 牵丝纪</td><td>织偶</td><td>数千年</td><td>权力、操控、自由意志的怀疑</td></tr>
+        <tr><td>第四纪 · 双月纪</td><td>晖光与胧影</td><td>数千年</td><td>分裂的自我、燃烧与寂静的共存</td></tr>
+        <tr><td>第五纪 · 镜映纪</td><td>镜川</td><td>千年计</td><td>自我审视、镜像权利、对真相的迷恋</td></tr>
+        <tr><td>第六纪 · 眠岸纪</td><td>浮梦</td><td>千年计</td><td>边界消融、共感、潜意识的勘探</td></tr>
+        <tr><td>第七纪 · 虚界纪</td><td>墟渊</td><td>数百年至今</td><td>不可逆、放手、我们仍然身在其中</td></tr>
+      </table>
+      <p style="margin-top:12px;font-size:.85rem;color:#8E9196">为什么不是八纪？晖光和胧影是同一轮月亮上的同一次觉醒——盈亏被人类同时感知。第八纪尚未到来——据说那将是所有诸相的意识同时汇聚的纪元。开启它的，也许是读到这里的你。</p>
+    </div>
+
+    <div class="card"><h3>关于</h3>
+      <p>《诸相》是一个原创神话世界观——八位不生不灭的原始存在，各自独立地盘踞在宇宙的不同角落。不是神，不要求崇拜；不是法则，不被遵循。</p>
+      <p>由 李皓宇 与 Butter 共同创作。项目存档于 <code>E:\openhanako\story</code>，同步至花笺笔记应用。共 10 份 Markdown 源文件，涵盖八位诸相、纪元时间线、反派阵营与剧情片段。</p>
+      <p style="margin-top:12px;font-size:.9rem;color:#8E9196">最后更新：2026年7月1日</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 墟渊 ==================== -->
+<div class="page" id="page-墟渊">
+  <div class="detail">
+    <button class="back-link" onclick="showPage('home')">返回主页</button>
+    <h2>墟渊</h2>
+    <p class="concept">不可逾越的边界。跨过那条线，一切都不会再回头。</p>
+    <p class="visual">一个永远出现的黑色圆面——大小不可判断，周围微微扭曲的光晕，中间是绝对的不反射任何东西的黑。没有地盘。任何人都可以去虚界——跨过那条线就行。面对墟渊时感到一种奇异的平静——深渊比你想象中更安静。</p>
+
+    <div class="card"><h3>存在 · 虚界</h3>
+      <p>墟渊没有领地。虚界不是"地盘"——它就是那条线本身。所有跨越不可逆之线的东西最终消失的地方。</p>
+      <p>虚界里没有光、没有声音、没有时间、没有方向。连"存在过"这个事实都会被抹去。墟渊不吞噬——它只是在那里，东西自己掉了进去。某些最古老的存在私下认为，墟渊可能是唯一会在宇宙终结之后仍留下来的东西。</p>
+    </div>
+
+    <div class="card"><h3>界限感知</h3>
+      <table>
+        <tr><th style="width:14%">知终</th><td>嗅到不可逆。能辨认什么东西正在加速靠近它自己的事件视界——不是预言，是看到颜色从它表面被慢慢抽走，先是高光，然后中间调，最后连轮廓也开始收缩。不能阻止任何事——你只能提前到达边界线，站好，等人走到需要被接住的地方。</td></tr>
+        <tr><th>承虚</th><td>承受「不存在」的重量而不被压垮。虚界的风在你胸口留下一个永不消失的凉点（心脏往下三指），以后的失去穿过这道裂痕时被分流——部分感受，部分流走。承虚者通常是陪临终者走最后一程的人——不提供慰藉，不提供来世。只是沉默陪着。</td></tr>
+        <tr><th>放行</th><td>八位诸相世界里唯一的<strong>结束循环</strong>之力。把一段执念、一张每晚都梦到的脸、一件不该再保存的耻辱物证——取下来，走到虚界边缘，松开手。朽壤在循环里转化，放行是<strong>结束</strong>循环。放行者的手会逐渐变透明——不是隐身，是虚界那侧的触碰在表皮上慢慢把汗毛漂成接近不存在。</td></tr>
+      </table>
+      <p style="margin-top:14px;font-size:.95rem;color:#8E9196">不可教。无法练。只有在真正面对一次不可逆失去时才站在界线上。墟渊不收努力的修行者——如果虚界连"找到"都允许刻意，那就不是绝对不可逆。</p>
+    </div>
+
+    <div class="card"><h3>追随者 · 界守</h3>
+      <p>墟渊没有同行者——没有路可以"走"。但有一群被外界叫<span class="tag">界守</span>的人——他们不聚落、不认人、不互相确认。界守之间即使在街上擦肩而过也认不出彼此。他们唯一共享的印记是胸口的凉点——靠近不可逆边界时它会微微降温，不是预警，是提醒你认真。</p>
+      <p><strong>回来的人：</strong>你在界线上站过，真实地考虑过跨过去——然后转身。回来之后不再容易被大词打动。"永远""绝对不会"——你听了会安静，不反驳，只是知道这四个字后面什么也没有。</p>
+      <p><strong>陪站的人：</strong>被抽走的颜色吸引——"你要去了。我陪你在边上，但我不进去。"你决定跨——他们不退，看你走进虚界。然后把你不在之后的第二天早饭安静吃完，一个人洗碗。</p>
+      <p><strong>收物的人：</strong>放行者。帮你把攥了半辈子的旧名字托到手心，走到界线，松手。放行之后你不一定感谢——因为手里空了。但他们不收报酬。极少界守在临终前走进虚界，说要去接某个早年想跨而不敢跨的人。没有证据。</p>
+    </div>
+
+    <blockquote>墟渊是所有诸相中最后被凡人意识到的。人类需要积累足够多的失去，才能理解有一种失去是<strong>不可逆</strong>的。第一个在界线上转身的人没有名字——只有他的动作被记住。从那以后边界两侧有了区别：这一侧存在，那一侧什么都没有。</blockquote>
+  </div>
+</div>
+
+<script>
+function toggleMenu(){
+  document.getElementById('hamburger').classList.toggle('open');
+  document.getElementById('menuOverlay').classList.toggle('open');
+}
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.getElementById('hamburger').classList.remove('open');
+  document.getElementById('menuOverlay').classList.remove('open');
+  window.scrollTo(0,0);
+}
+
+// Floating particles on homepage
+(function(){
+  var c=document.getElementById('particles');
+  if(!c)return;
+  for(var i=0;i<20;i++){
+    var p=document.createElement('div');
+    p.className='particle';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDelay=Math.random()*8+'s';
+    p.style.animationDuration=(5+Math.random()*7)+'s';
+    p.style.width=p.style.height=(1+Math.random()*2.5)+'px';
+    c.appendChild(p);
+  }
+})();
+
+// ESC key closes menu
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    document.getElementById('hamburger').classList.remove('open');
+    document.getElementById('menuOverlay').classList.remove('open');
+  }
+});
+
+// Mouse trail particles
+(function(){
+  var canvas=document.getElementById('mouseTrail');
+  var ctx=canvas.getContext('2d');
+  var particles=[];
+  var mouse={x:0,y:0};
+  var lastMouse={x:0,y:0};
+
+  function resize(){
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+
+  // Click ripple
+  document.addEventListener('click',function(e){
+    var cx=e.clientX,cy=e.clientY;
+    for(var r=0;r<3;r++){
+      var delay=r*80;
+      setTimeout(function(){
+        for(var i=0;i<28;i++){
+          var angle=(i/28)*Math.PI*2;
+          var speed=2+Math.random()*2.5;
+          particles.push({
+            x:cx,y:cy,
+            vx:Math.cos(angle)*speed,
+            vy:Math.sin(angle)*speed,
+            life:1,
+            size:1+Math.random()*2
+          });
+        }
+      },delay);
+    }
+  });
+
+  document.addEventListener('mousemove',function(e){
+    lastMouse.x=mouse.x;lastMouse.y=mouse.y;
+    mouse.x=e.clientX;mouse.y=e.clientY;
+    var dx=mouse.x-lastMouse.x;
+    var dy=mouse.y-lastMouse.y;
+    var dist=Math.sqrt(dx*dx+dy*dy);
+    var count=Math.min(Math.floor(dist/4),6);
+    for(var i=0;i<count;i++){
+      var t=i/count;
+      particles.push({
+        x:lastMouse.x+dx*t,
+        y:lastMouse.y+dy*t,
+        vx:(Math.random()-.5)*1.2,
+        vy:(Math.random()-.5)*1.2 - 0.6,
+        life:1,
+        size:.8+Math.random()*1.8
+      });
+    }
+  });
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(var i=particles.length-1;i>=0;i--){
+      var p=particles[i];
+      p.x+=p.vx;
+      p.y+=p.vy;
+      p.life-=.018;
+      if(p.life<=0){particles.splice(i,1);continue}
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle='rgba(83,125,150,'+(p.life*.5)+')';
+      ctx.fill();
+    }
+    // Keep total particles under 80
+    if(particles.length>80)particles.splice(0,particles.length-80);
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+</body>
+</html>
